@@ -1,39 +1,31 @@
-import axios from 'axios';
 import './App.css';
 import GridComponent from './components/grid/Grid'
 import { IServerData } from './models/IDataResponse';
 import { useEffect, useState } from 'react';
+import { getData, postData } from './services/dataService';
 
 function App() {
   const [data, setData] = useState<IServerData[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const backendUrl = 'http://localhost:5296/api/Data';
 
   useEffect(() => {
     requestData();
   }, []);
 
   const requestData = async () => {
-    axios.get(backendUrl).then(response => {
-      setData(response.data);
-      setLoading(true);
-    })
-    .catch(error => {
-      console.log(error);
-    });
-  }
+    const data = await getData();
+    setData(data);
+    setLoading(true);
+  };
 
   const handleDataChange = async (newData: IServerData[]) => {
     try {
-      await axios.post(backendUrl, {
-        data:newData
-      } );
-  } catch (error) {
-      console.error('Error updating data:', error);
-      requestData();
-  }
-};
+      await postData(newData);
+    } catch (error) {
+        console.error('Error updating data:', error);
+        requestData();
+    }
+  };
 
   return (
       <div className="App">
