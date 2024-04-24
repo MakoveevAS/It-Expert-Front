@@ -8,11 +8,12 @@ import {
   GridRowModesModel,
   GridSlots,
 } from '@mui/x-data-grid';
-import { Container, Paper } from '@mui/material';
+import { Container } from '@mui/material';
 import { randomId } from '@mui/x-data-grid-generator';
 import EditToolbar from './EditToolbar'
-import { IServerData } from '../../models/IDataResponse';
 import { GridRow } from '../../models/GridRow';
+import { GridProps } from './gridProps';
+
 
 const columns: GridColDef[] = [
   {
@@ -30,18 +31,32 @@ const columns: GridColDef[] = [
   }
 ];
 
-  export default function GridComponent(data: IServerData[]) {
-    const [rows, setRows] = React.useState<GridRow[]>([]);
+  export default function GridComponent({ data, onDataChange }: GridProps)  {
+
+    const [rows, setRows] = React.useState<GridRow[]>(data.map((d) => ({ ...d, id: randomId() })));
     const [rowModesModel, setRowModesModel] = React.useState({});
 
     React.useEffect(() => {
-      const array: GridRow[] = Object.keys(data).map(key => 
-        ({
-          id: randomId(),
-          ...data[key as any]
-        }));
-      setRows(array);
-    }, [data]);
+      setRows(data.map((d) => ({ ...d, id: randomId() })));
+  }, [data]);
+
+    React.useEffect(() => {
+        if(isNeedToSave(rows)){
+          onDataChange(rows);
+        }
+        
+    }, [rows, setRows]);
+
+
+    const isNeedToSave = (rows: GridRow[]): boolean => {
+      const isNewRow = !!rows.find(r => r.code === null);
+      const IsSame = data.length === rows.length && data.every((d, index) => {
+        const r = rows[index];
+        return d.code === r.code && d.value === r.value;
+      });
+
+      return !isNewRow && !IsSame;
+    }
 
     const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
       if (params.reason === GridRowEditStopReasons.rowFocusOut) {
@@ -72,6 +87,7 @@ const columns: GridColDef[] = [
               paginationModel: { page: 0, pageSize: 10 },
             },
           }}
+          pageSizeOptions={[10]}
           onRowEditStop={handleRowEditStop}
           processRowUpdate={processRowUpdate}
           onRowModesModelChange={handleRowModesModelChange}
@@ -85,3 +101,4 @@ const columns: GridColDef[] = [
       </Container>
     );
   }
+
