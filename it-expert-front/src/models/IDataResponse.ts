@@ -1,4 +1,4 @@
 export interface IServerData {
-    code: number
-    value: string
-  }
+    code: number;
+    value: string;
+}
